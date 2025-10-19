@@ -46,7 +46,7 @@ jobs:
             echo "Missing RENDER_DEPLOY_HOOK_URL secret"; exit 1
           fi
           # Käynnistä deploy Renderissä
-          http_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
+          http_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_URL")
           echo "Render response code: $http_code"
           # Render palauttaa tyypillisesti 200/201/202
           case "$http_code" in
