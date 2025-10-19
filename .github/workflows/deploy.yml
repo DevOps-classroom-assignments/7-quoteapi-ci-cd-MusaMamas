@@ -1,0 +1,57 @@
+name: Deploy on Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  deploy:
+    name: Trigger Render Deploy
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Render Deploy Hook
+        run: |
+          set -euo pipefail
+          if [ -z "${RENDER_DEPLOY_HOOK_URL:-}" ]; then
+            echo "Missing RENDER_DEPLOY_HOOK_URL secret"; exit 1
+          fi
+          # Käynnistä deploy Renderissä
+          http_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
+          echo "Render response code: $http_code"
+          # Render palauttaa tyypillisesti 200/201/202
+          case "$http_code" in
+            200|201|202) echo "Deploy triggered successfully." ;;
+            *) echo "Failed to trigger deploy"; exit 1 ;;
+          esac
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
