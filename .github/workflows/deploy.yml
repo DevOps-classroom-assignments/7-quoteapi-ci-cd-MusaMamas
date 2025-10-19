@@ -54,4 +54,4 @@ jobs:
             *) echo "Failed to trigger deploy"; exit 1 ;;
           esac
         env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
